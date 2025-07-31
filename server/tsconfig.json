@@ -3,7 +3,7 @@
     // Environment setup & latest features
     "lib": ["ESNext"],
     "target": "ES2020",
-    "module": "CommonJS",
+    "module": "ES2020",
     "moduleDetection": "force",
     "allowJs": true,
     "outDir": "./dist",
