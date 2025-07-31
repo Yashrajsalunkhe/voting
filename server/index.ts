@@ -403,22 +403,25 @@ process.on('SIGTERM', async () => {
   process.exit(0);
 });
 
-const PORT = process.env.PORT || 3000;
+// For Vercel deployment, export the app directly
+export default app;
 
-// Add error handling for unhandled rejections
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-});
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 3000;
 
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
-  process.exit(1);
-});
+  // Add error handling for unhandled rejections
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  });
 
-const server = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Process ID: ${process.pid}`);
-});
+  process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    process.exit(1);
+  });
 
-// Keep server reference to prevent garbage collection
-export { server };
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Process ID: ${process.pid}`);
+  });
+}
