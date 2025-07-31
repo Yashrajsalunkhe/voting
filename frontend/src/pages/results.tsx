@@ -18,13 +18,19 @@ interface ResultsData {
     candidateName: string;
     voteCount: number;
   }>>;
-  totalVotes: Record<string, number>;
+  statistics: {
+    totalVotesByPosition: Record<string, number>;
+    overallTotalVotes: number;
+    totalStudents: number;
+    turnoutPercentage: number;
+    positionsCount: number;
+  };
 }
 
 export default function Results({ onBackToVoting }: ResultsProps) {
   const authState = getAuthState();
   const hasVoted = authState.student?.hasVoted || false;
-  
+
   const { data: resultsData, isLoading, error, dataUpdatedAt } = useQuery<ResultsData>({
     queryKey: ["/api/results"],
     refetchInterval: 5000, // Refresh every 5 seconds for live updates
@@ -93,9 +99,8 @@ export default function Results({ onBackToVoting }: ResultsProps) {
     );
   }
 
-  const totalVotesCast = Object.values(resultsData?.totalVotes || {}).reduce((sum, votes) => Math.max(sum, votes), 0);
-  const eligibleStudents = 290; // This would come from the backend in a real app
-  const voterTurnout = totalVotesCast > 0 ? Math.round((totalVotesCast / eligibleStudents) * 100) : 0;
+  const totalVotesCast = resultsData?.statistics?.overallTotalVotes || 0;
+  const voterTurnout = resultsData?.statistics?.turnoutPercentage || 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -146,7 +151,7 @@ export default function Results({ onBackToVoting }: ResultsProps) {
         <div className="space-y-4 mb-6">
           {positions.map((position) => {
             const positionResults = resultsData?.results[position.key] || [];
-            const positionTotalVotes = resultsData?.totalVotes[position.key] || 0;
+            const positionTotalVotes = resultsData?.statistics?.totalVotesByPosition[position.key] || 0;
 
             return (
               <ResultsCard

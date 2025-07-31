@@ -10,6 +10,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Login from "@/pages/login";
 import Voting from "@/pages/voting";
+import Results from "@/pages/results";
 
 type AppView = "login" | "voting" | "results";
 
@@ -191,6 +192,10 @@ function AppContent() {
       
       {currentView === "voting" && authState.isAuthenticated && (
         <Voting onVoteSuccess={handleVoteSuccess} onNavigateToResults={handleViewResults} />
+      )}
+      
+      {currentView === "results" && authState.isAuthenticated && (
+        <Results onBackToVoting={handleBackToVoting} />
       )}
     </div>
   );
