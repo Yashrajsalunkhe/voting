@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import connectDB from "./config/database.js";
+import connectDB from "./config/database";
 import { 
   Student, 
   Candidate, 
