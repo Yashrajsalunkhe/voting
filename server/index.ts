@@ -1,9 +1,8 @@
 import express from "express";
 import cors from "cors";
-import path from "path";
+// import path from "path";
 import { PrismaClient } from "./generated/prisma";
-import { fileURLToPath } from "url";
-
+// import { fileURLToPath } from "url";
 export const app = express();
 
 const prisma = new PrismaClient();
@@ -11,16 +10,16 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
 
 
-// Serve frontend static files
-app.use(express.static(path.join(__dirname, "../../frontend/dist")));
+// // Serve frontend static files
+// app.use(express.static(path.join(__dirname, "../../frontend/dist")));
 
-app.get("/", (_req, res) => {
-  res.sendFile(path.join(__dirname, "../../frontend/dist", "index.html"));
-});
+// app.get("/", (_req, res) => {
+//   res.sendFile(path.join(__dirname, "../../frontend/dist", "index.html"));
+// });
 
 app.post("/api/auth/login", async (req, res) => {
   try {
