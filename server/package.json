@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch index.ts",
     "build": "npm run clean && npm run build:frontend && npm run build:server",
-    "build:frontend": "cd ../frontend && npm run build && cp -r dist ../server/public",
+    "build:frontend": "cd ../frontend && npm install && npm run build && cp -r dist ../server/public",
     "build:server": "tsc",
     "start": "NODE_ENV=production node dist/index.js",
     "start:dev": "npm run dev",
