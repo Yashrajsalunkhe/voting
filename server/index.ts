@@ -1,11 +1,22 @@
 import express from "express";
 import cors from "cors";
+import mongoose from "mongoose";
+import connectDB from "./config/database";
+import { 
+  Student, 
+  Candidate, 
+  Vote, 
+  SecondYearVotes, 
+  ThirdYearVotes, 
+  FinalYearVotes 
+} from "./models";
 // import path from "path";
-import { PrismaClient } from "./generated/prisma";
 // import { fileURLToPath } from "url";
 export const app = express();
 
-const prisma = new PrismaClient();
+// Connect to MongoDB
+connectDB();
+
 const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
@@ -32,9 +43,7 @@ app.post("/api/auth/login", async (req, res) => {
       });
     }
 
-    const student = await prisma.student.findUnique({
-      where: { urn: urn.toString() }
-    });
+    const student = await Student.findOne({ urn: urn.toString() });
 
     if (!student) {
       return res.status(404).json({
@@ -54,7 +63,7 @@ app.post("/api/auth/login", async (req, res) => {
       success: true,
       message: "Authentication successful",
       student: {
-        id: student.id,
+        id: student._id.toString(),
         urn: student.urn,
         year: student.year,
         hasVoted: student.hasVoted
@@ -72,12 +81,7 @@ app.post("/api/auth/login", async (req, res) => {
 
 app.get("/api/candidates", async (req, res) => {
   try {
-    const candidatesArray = await prisma.candidate.findMany({
-      orderBy: [
-        { position: 'asc' },
-        { name: 'asc' }
-      ]
-    });
+    const candidatesArray = await Candidate.find().sort({ position: 1, name: 1 });
 
     // Group candidates by position
     const candidates = candidatesArray.reduce((acc: Record<string, any[]>, candidate: any) => {
@@ -113,9 +117,7 @@ app.post("/api/votes", async (req, res) => {
       });
     }
 
-    const student = await prisma.student.findUnique({
-      where: { id: studentId }
-    });
+    const student = await Student.findById(studentId);
 
     if (!student) {
       return res.status(404).json({
@@ -140,56 +142,60 @@ app.post("/api/votes", async (req, res) => {
       }
     }
 
-    await prisma.$transaction(async (tx: any) => {
-      for (const vote of votes) {
-        const candidate = await tx.candidate.findUnique({
-          where: { id: vote.candidateId }
-        });
+    // Start a session for transaction
+    const session = await mongoose.startSession();
+    
+    try {
+      await session.withTransaction(async () => {
+        for (const vote of votes) {
+          const candidate = await Candidate.findById(vote.candidateId).session(session);
 
-        if (!candidate) {
-          throw new Error(`Candidate not found: ${vote.candidateId}`);
-        }
+          if (!candidate) {
+            throw new Error(`Candidate not found: ${vote.candidateId}`);
+          }
 
-        // Create vote in main votes table
-        await tx.vote.create({
-          data: {
-            studentId: student.id,
+          // Create vote in main votes table
+          await Vote.create([{
+            studentId: student._id,
             candidateId: vote.candidateId,
             position: vote.position
+          }], { session });
+
+          // Create vote in year-specific table
+          const voteData = {
+            urn: student.urn,
+            studentId: student._id,
+            candidateId: vote.candidateId,
+            candidateName: candidate.name,
+            position: vote.position
+          };
+
+          switch (student.year) {
+            case 'second-year':
+              await SecondYearVotes.create([voteData], { session });
+              break;
+            case 'third-year':
+              await ThirdYearVotes.create([voteData], { session });
+              break;
+            case 'final-year':
+              await FinalYearVotes.create([voteData], { session });
+              break;
           }
-        });
-
-        // Create vote in year-specific table
-        const voteData = {
-          urn: student.urn,
-          studentId: student.id,
-          candidateId: vote.candidateId,
-          candidateName: candidate.name,
-          position: vote.position
-        };
-
-        switch (student.year) {
-          case 'second-year':
-            await tx.secondYearVotes.create({ data: voteData });
-            break;
-          case 'third-year':
-            await tx.thirdYearVotes.create({ data: voteData });
-            break;
-          case 'final-year':
-            await tx.finalYearVotes.create({ data: voteData });
-            break;
         }
-      }
 
-      // Mark student as voted
-      await tx.student.update({
-        where: { id: student.id },
-        data: {
-          hasVoted: true,
-          votedAt: new Date()
-        }
+        // Mark student as voted
+        await Student.findByIdAndUpdate(
+          student._id,
+          {
+            hasVoted: true,
+            votedAt: new Date()
+          },
+          { session }
+        );
       });
-    });
+    } finally {
+      await session.endSession();
+    }
 
     res.json({
       success: true,
@@ -212,37 +218,44 @@ app.get("/api/results", async (req, res) => {
     let results;
 
     if (year) {
-      // Get results for specific year
+      // Get results for specific year using aggregation
+      const aggregationPipeline: any[] = [
+        {
+          $group: {
+            _id: {
+              candidateId: "$candidateId",
+              candidateName: "$candidateName",
+              position: "$position"
+            },
+            count: { $sum: 1 }
+          }
+        },
+        {
+          $sort: {
+            "_id.position": 1,
+            "count": -1
+          } as any
+        },
+        {
+          $project: {
+            candidateId: "$_id.candidateId",
+            candidateName: "$_id.candidateName", 
+            position: "$_id.position",
+            _count: { candidateId: "$count" },
+            _id: 0
+          }
+        }
+      ];
+
       switch (year) {
         case 'second-year':
-          results = await prisma.secondYearVotes.groupBy({
-            by: ['candidateId', 'candidateName', 'position'],
-            _count: { candidateId: true },
-            orderBy: [
-              { position: 'asc' },
-              { _count: { candidateId: 'desc' } }
-            ]
-          });
+          results = await SecondYearVotes.aggregate(aggregationPipeline);
           break;
         case 'third-year':
-          results = await prisma.thirdYearVotes.groupBy({
-            by: ['candidateId', 'candidateName', 'position'],
-            _count: { candidateId: true },
-            orderBy: [
-              { position: 'asc' },
-              { _count: { candidateId: 'desc' } }
-            ]
-          });
+          results = await ThirdYearVotes.aggregate(aggregationPipeline);
           break;
         case 'final-year':
-          results = await prisma.finalYearVotes.groupBy({
-            by: ['candidateId', 'candidateName', 'position'],
-            _count: { candidateId: true },
-            orderBy: [
-              { position: 'asc' },
-              { _count: { candidateId: 'desc' } }
-            ]
-          });
+          results = await FinalYearVotes.aggregate(aggregationPipeline);
           break;
         default:
           return res.status(400).json({
@@ -251,26 +264,35 @@ app.get("/api/results", async (req, res) => {
           });
       }
     } else {
-      // Get overall results
-      results = await prisma.vote.groupBy({
-        by: ['candidateId', 'position'],
-        _count: { candidateId: true },
-        orderBy: [
-          { position: 'asc' },
-          { _count: { candidateId: 'desc' } }
-        ]
-      });
+      // Get overall results using aggregation
+      const voteResults = await Vote.aggregate([
+        {
+          $group: {
+            _id: {
+              candidateId: "$candidateId",
+              position: "$position"
+            },
+            count: { $sum: 1 }
+          }
+        },
+        {
+          $sort: {
+            "_id.position": 1,
+            "count": -1
+          } as any
+        }
+      ]);
 
       // Enrich with candidate details
       const enrichedResults = await Promise.all(
-        results.map(async (result: any) => {
-          const candidate = await prisma.candidate.findUnique({
-            where: { id: result.candidateId }
-          });
+        voteResults.map(async (result: any) => {
+          const candidate = await Candidate.findById(result._id.candidateId);
           return {
-            ...result,
+            candidateId: result._id.candidateId,
+            position: result._id.position,
             candidateName: candidate?.name || 'Unknown',
-            candidateImageUrl: candidate?.imageUrl
+            candidateImageUrl: candidate?.imageUrl,
+            _count: { candidateId: result.count }
           };
         })
       );
@@ -278,14 +300,20 @@ app.get("/api/results", async (req, res) => {
     }
 
     // Get voting statistics
-    const totalStudents = await prisma.student.count();
+    const totalStudents = await Student.countDocuments();
     
-    // Count actual voters based on vote records, not hasVoted flag
-    const actualVoters = await prisma.vote.groupBy({
-      by: ['studentId'],
-      _count: { studentId: true }
-    });
-    const actualVotedStudents = actualVoters.length;
+    // Count actual voters based on vote records
+    const actualVoters = await Vote.aggregate([
+      {
+        $group: {
+          _id: "$studentId"
+        }
+      },
+      {
+        $count: "totalVoters"
+      }
+    ]);
+    const actualVotedStudents = actualVoters.length > 0 ? actualVoters[0].totalVoters : 0;
 
     // Group results by position and format for frontend
     const groupedResults = results.reduce((acc: Record<string, any[]>, result: any) => {
@@ -338,13 +366,7 @@ app.get("/api/voting-status/:studentId", async (req, res) => {
   try {
     const { studentId } = req.params;
 
-    const student = await prisma.student.findUnique({
-      where: { id: studentId },
-      select: {
-        hasVoted: true,
-        votedAt: true
-      }
-    });
+    const student = await Student.findById(studentId).select('hasVoted votedAt');
 
     if (!student) {
       return res.status(404).json({
@@ -371,19 +393,9 @@ app.get("/api/voting-status/:studentId", async (req, res) => {
 // Admin endpoint to get all students (for testing/admin purposes)
 app.get("/admin/students", async (req, res) => {
   try {
-    const students = await prisma.student.findMany({
-      select: {
-        id: true,
-        urn: true,
-        year: true,
-        hasVoted: true,
-        votedAt: true
-      },
-      orderBy: [
-        { year: 'asc' },
-        { urn: 'asc' }
-      ]
-    });
+    const students = await Student.find()
+      .select('urn year hasVoted votedAt')
+      .sort({ year: 1, urn: 1 });
 
     res.json({
       status: true,
@@ -401,12 +413,12 @@ app.get("/admin/students", async (req, res) => {
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
-  await prisma.$disconnect();
+  await mongoose.disconnect();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-  await prisma.$disconnect();
+  await mongoose.disconnect();
   process.exit(0);
 });
 
