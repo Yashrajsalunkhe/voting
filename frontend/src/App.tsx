@@ -1,0 +1,210 @@
+import { useState, useEffect } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { GraduationCap, LogOut } from "lucide-react";
+
+import { queryClient } from "@/lib/queryClient";
+import { getAuthState, clearAuthState } from "@/lib/auth";
+import { useVotingStatus } from "@/hooks/use-voting-status";
+import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import Login from "@/pages/login";
+import Voting from "@/pages/voting";
+
+type AppView = "login" | "voting" | "results";
+
+function Header({ 
+  currentView, 
+  studentUrn, 
+  hasVoted,
+  onLogout, 
+  onViewResults, 
+  onBackToVoting 
+}: {
+  currentView: AppView;
+  studentUrn?: string;
+  hasVoted?: boolean;
+  onLogout: () => void;
+  onViewResults: () => void;
+  onBackToVoting: () => void;
+}) {
+  return (
+    <header className="bg-white shadow-sm border-b border-gray-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-aisa-blue rounded-lg flex items-center justify-center">
+              <GraduationCap className="text-white" size={20} />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-aisa-navy" data-testid="header-title">
+                AISA Voting System
+              </h1>
+              <p className="text-sm text-gray-600" data-testid="header-subtitle">
+                AI&DS Student Association
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-4">
+            {currentView !== "login" && (
+              <>
+                {studentUrn && (
+                  <span className="text-sm text-gray-600" data-testid="user-info">
+                    Welcome, {studentUrn}
+                  </span>
+                )}
+                {currentView === "voting" && (
+                  <Button
+                    onClick={onViewResults}
+                    variant="outline"
+                    size="sm"
+                    data-testid="button-view-results-header"
+                  >
+                    View Results
+                  </Button>
+                )}
+                {currentView === "results" && !hasVoted && (
+                  <Button
+                    onClick={onBackToVoting}
+                    variant="outline"
+                    size="sm"
+                    data-testid="button-back-to-voting-header"
+                  >
+                    Back to Voting
+                  </Button>
+                )}
+                <Button
+                  onClick={onLogout}
+                  variant="ghost"
+                  size="sm"
+                  className="text-aisa-blue hover:text-aisa-navy"
+                  data-testid="button-logout"
+                >
+                  <LogOut className="mr-1 h-4 w-4" />
+                  Logout
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function AppContent() {
+  const [currentView, setCurrentView] = useState<AppView>("login");
+  const [authState, setAuthStateLocal] = useState(getAuthState());
+  
+  // Use the voting status hook to keep track of voting state
+  const { hasVoted } = useVotingStatus();
+
+  useEffect(() => {
+    // For development: always start at login page
+    // Comment out the auto-login logic during development
+    /*
+    const auth = getAuthState();
+    console.log('Initial auth state from localStorage:', auth); // Debug log
+    setAuthStateLocal(auth);
+    if (auth.isAuthenticated) {
+      console.log('Auto-logging in user:', auth.student); // Debug log
+      // If student has already voted, redirect to results
+      if (auth.student?.hasVoted) {
+        setCurrentView("results");
+      } else {
+        setCurrentView("voting");
+      }
+    } else {
+      console.log('No auth state found, staying on login'); // Debug log
+      setCurrentView("login");
+    }
+    */
+    
+    // Always start at login for development
+    console.log('Starting at login page for development');
+    setCurrentView("login");
+  }, []);
+
+  // Update view when voting status changes
+  useEffect(() => {
+    if (authState.isAuthenticated && hasVoted && currentView === "voting") {
+      setCurrentView("results");
+    }
+  }, [hasVoted, authState.isAuthenticated, currentView]);
+
+  const handleLoginSuccess = () => {
+    const auth = getAuthState();
+    setAuthStateLocal(auth);
+    // If student has already voted, redirect to results
+    if (auth.student?.hasVoted) {
+      setCurrentView("results");
+    } else {
+      setCurrentView("voting");
+    }
+  };
+
+  const handleVoteSuccess = () => {
+    // Update auth state to reflect that student has voted
+    const auth = getAuthState();
+    if (auth.student) {
+      const updatedAuth = {
+        ...auth,
+        student: { ...auth.student, hasVoted: true }
+      };
+      setAuthStateLocal(updatedAuth);
+      localStorage.setItem('aisa-auth', JSON.stringify(updatedAuth));
+    }
+    setCurrentView("results");
+  };
+
+  const handleLogout = () => {
+    clearAuthState();
+    setAuthStateLocal({ isAuthenticated: false, student: null });
+    setCurrentView("login");
+  };
+
+  const handleViewResults = () => {
+    setCurrentView("results");
+  };
+
+  const handleBackToVoting = () => {
+    // Only allow going back to voting if student hasn't voted
+    if (!hasVoted) {
+      setCurrentView("voting");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Header
+        currentView={currentView}
+        studentUrn={authState.student?.urn}
+        hasVoted={hasVoted}
+        onLogout={handleLogout}
+        onViewResults={handleViewResults}
+        onBackToVoting={handleBackToVoting}
+      />
+      
+      {currentView === "login" && (
+        <Login onLoginSuccess={handleLoginSuccess} />
+      )}
+      
+      {currentView === "voting" && authState.isAuthenticated && (
+        <Voting onVoteSuccess={handleVoteSuccess} onNavigateToResults={handleViewResults} />
+      )}
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <AppContent />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
+
+export default App;
