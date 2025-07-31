@@ -1,21 +1,21 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.app = void 0;
-const express_1 = __importDefault(require("express"));
-const cors_1 = __importDefault(require("cors"));
-const prisma_1 = require("./generated/prisma");
-const prisma = new prisma_1.PrismaClient();
-exports.app = (0, express_1.default)();
-exports.app.use((0, cors_1.default)());
-exports.app.use(express_1.default.json());
-// app.use(express.static(path.join(process.cwd(), "dist")));
-// app.get("/", (_req, res) => {
-//   res.sendFile(path.join(process.cwd(), "dist", "index.html"));
-// });
-exports.app.post("/api/auth/login", async (req, res) => {
+import express from "express";
+import cors from "cors";
+import path from "path";
+import { PrismaClient } from "./generated/prisma";
+import { fileURLToPath } from "url";
+export const app = express();
+const prisma = new PrismaClient();
+const PORT = process.env.PORT || 3000;
+app.use(cors());
+app.use(express.json());
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+// Serve frontend static files
+app.use(express.static(path.join(__dirname, "../../frontend/dist")));
+app.get("/", (_req, res) => {
+    res.sendFile(path.join(__dirname, "../../frontend/dist", "index.html"));
+});
+app.post("/api/auth/login", async (req, res) => {
     try {
         const { urn, motherName } = req.body;
         if (!urn || !motherName) {
@@ -58,7 +58,7 @@ exports.app.post("/api/auth/login", async (req, res) => {
         });
     }
 });
-exports.app.get("/api/candidates", async (req, res) => {
+app.get("/api/candidates", async (req, res) => {
     try {
         const candidatesArray = await prisma.candidate.findMany({
             orderBy: [
@@ -87,7 +87,7 @@ exports.app.get("/api/candidates", async (req, res) => {
         });
     }
 });
-exports.app.post("/api/votes", async (req, res) => {
+app.post("/api/votes", async (req, res) => {
     try {
         const { studentId, votes } = req.body;
         if (!studentId || !votes || !Array.isArray(votes)) {
@@ -178,7 +178,7 @@ exports.app.post("/api/votes", async (req, res) => {
     }
 });
 // Results endpoint
-exports.app.get("/api/results", async (req, res) => {
+app.get("/api/results", async (req, res) => {
     try {
         const { year } = req.query;
         let results;
@@ -297,7 +297,7 @@ exports.app.get("/api/results", async (req, res) => {
     }
 });
 // Check voting status
-exports.app.get("/api/voting-status/:studentId", async (req, res) => {
+app.get("/api/voting-status/:studentId", async (req, res) => {
     try {
         const { studentId } = req.params;
         const student = await prisma.student.findUnique({
@@ -328,7 +328,7 @@ exports.app.get("/api/voting-status/:studentId", async (req, res) => {
     }
 });
 // Admin endpoint to get all students (for testing/admin purposes)
-exports.app.get("/admin/students", async (req, res) => {
+app.get("/admin/students", async (req, res) => {
     try {
         const students = await prisma.student.findMany({
             select: {
@@ -366,7 +366,7 @@ process.on('SIGTERM', async () => {
     process.exit(0);
 });
 // For Vercel deployment, export the app directly
-exports.default = exports.app;
+export default app;
 // For local development
 if (process.env.NODE_ENV !== 'production') {
     const PORT = process.env.PORT || 3000;
@@ -378,7 +378,7 @@ if (process.env.NODE_ENV !== 'production') {
         console.error('Uncaught Exception:', error);
         process.exit(1);
     });
-    exports.app.listen(PORT, () => {
+    app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
         console.log(`Process ID: ${process.pid}`);
     });
