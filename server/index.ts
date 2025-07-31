@@ -8,11 +8,11 @@ export const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(process.cwd(), "dist")));
+// app.use(express.static(path.join(process.cwd(), "dist")));
 
-app.get("/", (_req, res) => {
-  res.sendFile(path.join(process.cwd(), "dist", "index.html"));
-});
+// app.get("/", (_req, res) => {
+//   res.sendFile(path.join(process.cwd(), "dist", "index.html"));
+// });
 
 app.post("/api/auth/login", async (req, res) => {
   try {

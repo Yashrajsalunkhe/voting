@@ -31,7 +31,9 @@ export default function Voting({ onVoteSuccess, onNavigateToResults }: VotingPro
   const { hasVoted } = useVotingStatus();
 
   // Check if student has already voted (using live status)
+  console.log('Voting component - hasVoted:', hasVoted); // Debug log
   if (hasVoted) {
+    console.log('Student has voted, showing already voted message'); // Debug log
     return (
       <div className="max-w-4xl mx-auto p-6">
         <Card className="text-center p-8">

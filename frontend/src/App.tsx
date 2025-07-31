@@ -117,34 +117,24 @@ function AppContent() {
     setAuthStateLocal(auth);
     if (auth.isAuthenticated && auth.student) {
       console.log('Auto-logging in user:', auth.student); // Debug log
-      // If student has already voted, redirect to results
-      if (auth.student.hasVoted) {
-        setCurrentView("results");
-      } else {
-        setCurrentView("voting");
-      }
+      // Always redirect to voting page first, let the voting component handle the redirect
+      setCurrentView("voting");
     } else {
       console.log('No auth state found, staying on login'); // Debug log
       setCurrentView("login");
     }
   }, []);
 
-  // Update view when voting status changes
-  useEffect(() => {
-    if (authState.isAuthenticated && hasVoted && currentView === "voting") {
-      setCurrentView("results");
-    }
-  }, [hasVoted, authState.isAuthenticated, currentView]);
+  // Note: Removed automatic redirect to results when hasVoted changes
+  // Let the voting component handle this UX instead
 
   const handleLoginSuccess = () => {
     const auth = getAuthState();
+    console.log('Login success - auth state:', auth); // Debug log
     setAuthStateLocal(auth);
-    // If student has already voted, redirect to results
-    if (auth.student?.hasVoted) {
-      setCurrentView("results");
-    } else {
-      setCurrentView("voting");
-    }
+    // Always redirect to voting page first, let the voting component handle the redirect
+    console.log('Redirecting to voting page'); // Debug log
+    setCurrentView("voting");
   };
 
   const handleVoteSuccess = () => {
