@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import connectDB from "./config/database";
+import connectDB from "./config/database.js";
 import { 
   Student, 
   Candidate, 
@@ -9,7 +9,7 @@ import {
   SecondYearVotes, 
   ThirdYearVotes, 
   FinalYearVotes 
-} from "./models";
+} from "./models/index.js";
 // import path from "path";
 // import { fileURLToPath } from "url";
 export const app = express();

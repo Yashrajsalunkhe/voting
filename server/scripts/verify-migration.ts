@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import { Student, Candidate, Vote, SecondYearVotes, ThirdYearVotes, FinalYearVotes } from '../models';
-import connectDB from '../config/database';
+import { Student, Candidate, Vote, SecondYearVotes, ThirdYearVotes, FinalYearVotes } from '../models/index.js';
+import connectDB from '../config/database.js';
 
 // This script can be used to verify your existing data works with the new Mongoose models
 // or to migrate data if there are any structural changes needed

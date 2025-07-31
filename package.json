@@ -1,8 +1,8 @@
 {
-    "name": "Voting",
+    "name": "voting",
     "version": "1.0.0",
     "description": "Voting event platform",
     "scripts": {
-        "build": "cd frontend && npm install && npm run build && rm -rf ../dist && cp -R dist ../dist"
+        "build": "cd server && npm install && npm run build && cd ../frontend && npm install && npm run build && rm -rf ../dist && cp -R dist ../dist"
     }
 }

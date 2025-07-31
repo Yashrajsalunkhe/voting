@@ -1,6 +1,6 @@
-export { Student, IStudent } from './Student';
-export { Candidate, ICandidate } from './Candidate';
-export { Vote, IVote } from './Vote';
-export { SecondYearVotes, ISecondYearVotes } from './SecondYearVotes';
-export { ThirdYearVotes, IThirdYearVotes } from './ThirdYearVotes';
-export { FinalYearVotes, IFinalYearVotes } from './FinalYearVotes';
+export { Student, IStudent } from './Student.js';
+export { Candidate, ICandidate } from './Candidate.js';
+export { Vote, IVote } from './Vote.js';
+export { SecondYearVotes, ISecondYearVotes } from './SecondYearVotes.js';
+export { ThirdYearVotes, IThirdYearVotes } from './ThirdYearVotes.js';
+export { FinalYearVotes, IFinalYearVotes } from './FinalYearVotes.js';
