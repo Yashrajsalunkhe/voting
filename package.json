@@ -3,6 +3,6 @@
     "version": "1.0.0",
     "description": "Voting event platform",
     "scripts": {
-        "build": "cd server && npm install && npm run build && cd ../frontend && npm install && npm run build && rm -rf ../dist && cp -R dist ../dist"
+        "build": "cd frontend && npm install && npm run build && rm -rf ../dist && cp -R dist ../dist"
     }
 }
