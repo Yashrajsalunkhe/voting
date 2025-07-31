@@ -6,50 +6,46 @@ import { PrismaClient } from "./generated/prisma/index";
 const prisma = new PrismaClient();
 export const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(process.cwd(), "dist")));
 
-// Serve frontend
 app.get("/", (_req, res) => {
   res.sendFile(path.join(process.cwd(), "dist", "index.html"));
 });
 
-// Authentication endpoint
-app.post("/auth", async (req, res) => {
+app.post("/api/auth/login", async (req, res) => {
   try {
     const { urn, motherName } = req.body;
 
     if (!urn || !motherName) {
       return res.status(400).json({
-        status: false,
-        description: "URN and mother's name are required"
+        success: false,
+        message: "URN and mother's name are required"
       });
     }
 
-    // Find student by URN and verify mother's name
     const student = await prisma.student.findUnique({
       where: { urn: urn.toString() }
     });
 
     if (!student) {
       return res.status(404).json({
-        status: false,
-        description: "Student not found"
+        success: false,
+        message: "Student not found"
       });
     }
 
     if (student.motherName.toLowerCase() !== motherName.toLowerCase()) {
       return res.status(401).json({
-        status: false,
-        description: "Invalid credentials"
+        success: false,
+        message: "Invalid credentials"
       });
     }
 
     res.json({
-      status: true,
-      description: "Authentication successful",
+      success: true,
+      message: "Authentication successful",
       student: {
         id: student.id,
         urn: student.urn,
@@ -61,79 +57,83 @@ app.post("/auth", async (req, res) => {
   } catch (error) {
     console.error("Auth error:", error);
     res.status(500).json({
-      status: false,
-      description: "Internal server error"
+      success: false,
+      message: "Internal server error"
     });
   }
 });
 
-// Get candidates endpoint
-app.get("/candidates", async (req, res) => {
+app.get("/api/candidates", async (req, res) => {
   try {
-    const candidates = await prisma.candidate.findMany({
+    const candidatesArray = await prisma.candidate.findMany({
       orderBy: [
         { position: 'asc' },
         { name: 'asc' }
       ]
     });
 
+    // Group candidates by position
+    const candidates = candidatesArray.reduce((acc, candidate) => {
+      if (!acc[candidate.position]) {
+        acc[candidate.position] = [];
+      }
+      acc[candidate.position]!.push(candidate);
+      return acc;
+    }, {} as Record<string, any[]>);
+
     res.json({
-      status: true,
+      success: true,
       candidates
     });
 
   } catch (error) {
     console.error("Get candidates error:", error);
     res.status(500).json({
-      status: false,
-      description: "Failed to fetch candidates"
+      success: false,
+      message: "Failed to fetch candidates"
     });
   }
 });
-// Vote endpoint
-app.post("/vote", async (req, res) => {
+
+app.post("/api/votes", async (req, res) => {
   try {
     const { studentId, votes } = req.body;
 
     if (!studentId || !votes || !Array.isArray(votes)) {
       return res.status(400).json({
-        status: false,
-        description: "Student ID and votes array are required"
+        success: false,
+        message: "Student ID and votes array are required"
       });
     }
 
-    // Get student details
     const student = await prisma.student.findUnique({
       where: { id: studentId }
     });
 
     if (!student) {
       return res.status(404).json({
-        status: false,
-        description: "Student not found"
+        success: false,
+        message: "Student not found"
       });
     }
 
     if (student.hasVoted) {
       return res.status(400).json({
-        status: false,
-        description: "Student has already voted"
+        success: false,
+        message: "Student has already voted"
       });
     }
 
-    // Validate votes structure
     for (const vote of votes) {
       if (!vote.candidateId || !vote.position) {
         return res.status(400).json({
-          status: false,
-          description: "Invalid vote structure"
+          success: false,
+          message: "Invalid vote structure"
         });
       }
     }
 
-    // Process votes in transaction
     await prisma.$transaction(async (tx) => {
-      // Create votes in main votes table
       for (const vote of votes) {
         const candidate = await tx.candidate.findUnique({
           where: { id: vote.candidateId }
@@ -185,25 +185,25 @@ app.post("/vote", async (req, res) => {
     });
 
     res.json({
-      status: true,
-      description: "Votes recorded successfully"
+      success: true,
+      message: "Votes recorded successfully"
     });
 
   } catch (error) {
     console.error("Vote error:", error);
     res.status(500).json({
-      status: false,
-      description: "Failed to record votes"
+      success: false,
+      message: "Failed to record votes"
     });
   }
 });
 // Results endpoint
-app.get("/results", async (req, res) => {
+app.get("/api/results", async (req, res) => {
   try {
     const { year } = req.query;
 
     let results;
-    
+
     if (year) {
       // Get results for specific year
       switch (year) {
@@ -239,8 +239,8 @@ app.get("/results", async (req, res) => {
           break;
         default:
           return res.status(400).json({
-            status: false,
-            description: "Invalid year parameter"
+            success: false,
+            message: "Invalid year parameter"
           });
       }
     } else {
@@ -276,26 +276,52 @@ app.get("/results", async (req, res) => {
       where: { hasVoted: true }
     });
 
+    // Group results by position and format for frontend
+    const groupedResults = results.reduce((acc, result) => {
+      if (!acc[result.position]) {
+        acc[result.position] = [];
+      }
+      acc[result.position].push({
+        candidateId: result.candidateId,
+        candidateName: result.candidateName,
+        voteCount: result._count.candidateId
+      });
+      return acc;
+    }, {} as Record<string, any[]>);
+
+    // Calculate statistics
+    const totalVotesByPosition = results.reduce((acc, result) => {
+      if (!acc[result.position]) {
+        acc[result.position] = 0;
+      }
+      acc[result.position] += result._count.candidateId;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const overallTotalVotes = results.reduce((sum, result) => sum + result._count.candidateId, 0);
+
     res.json({
-      status: true,
-      results,
+      success: true,
+      results: groupedResults,
       statistics: {
+        totalVotesByPosition,
+        overallTotalVotes,
         totalStudents,
-        votedStudents,
-        votingPercentage: totalStudents > 0 ? ((votedStudents / totalStudents) * 100).toFixed(2) : 0
+        turnoutPercentage: totalStudents > 0 ? parseFloat(((votedStudents / totalStudents) * 100).toFixed(2)) : 0,
+        positionsCount: Object.keys(groupedResults).length
       }
     });
 
   } catch (error) {
     console.error("Results error:", error);
     res.status(500).json({
-      status: false,
-      description: "Failed to fetch results"
+      success: false,
+      message: "Failed to fetch results"
     });
   }
 });
 // Check voting status
-app.get("/voting-status/:studentId", async (req, res) => {
+app.get("/api/voting-status/:studentId", async (req, res) => {
   try {
     const { studentId } = req.params;
 
@@ -309,13 +335,13 @@ app.get("/voting-status/:studentId", async (req, res) => {
 
     if (!student) {
       return res.status(404).json({
-        status: false,
-        description: "Student not found"
+        success: false,
+        message: "Student not found"
       });
     }
 
     res.json({
-      status: true,
+      success: true,
       hasVoted: student.hasVoted,
       votedAt: student.votedAt
     });
@@ -323,8 +349,8 @@ app.get("/voting-status/:studentId", async (req, res) => {
   } catch (error) {
     console.error("Voting status error:", error);
     res.status(500).json({
-      status: false,
-      description: "Failed to check voting status"
+      success: false,
+      message: "Failed to check voting status"
     });
   }
 });
@@ -372,6 +398,21 @@ process.on('SIGTERM', async () => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+
+// Add error handling for unhandled rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
+const server = app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Process ID: ${process.pid}`);
+});
+
+// Keep server reference to prevent garbage collection
+export { server };
