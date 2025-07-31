@@ -54,7 +54,7 @@ function Header({
                     Welcome, {studentUrn}
                   </span>
                 )}
-                {currentView === "voting" && (
+               {/* {currentView === "voting" && (
                   <Button
                     onClick={onViewResults}
                     variant="outline"
@@ -63,7 +63,7 @@ function Header({
                   >
                     View Results
                   </Button>
-                )}
+                )} */}
                 {currentView === "results" && !hasVoted && (
                   <Button
                     onClick={onBackToVoting}
