@@ -293,7 +293,7 @@ export default function Voting({ onVoteSuccess, onNavigateToResults }: VotingPro
                   Cast Your Vote
                 </h2>
                 <p className="text-sm text-gray-600">
-                  AISA Elections 2024
+                  AISA Elections 2025
                 </p>
               </div>
             </div>

@@ -72,7 +72,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
             <Vote className="text-white" size={24} />
           </div>
           <h2 className="text-2xl font-bold text-aisa-navy mb-2" data-testid="login-title">
-            AISA Elections 2024
+            AISA Elections 2025
           </h2>
           <p className="text-gray-600 text-sm" data-testid="login-subtitle">
             Enter your credentials to vote
