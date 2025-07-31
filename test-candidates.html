@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Candidates API</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .candidate { border: 1px solid #ccc; margin: 10px; padding: 15px; border-radius: 8px; }
+        .position { background: #f0f0f0; padding: 10px; margin: 20px 0; border-radius: 5px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #results { margin-top: 20px; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Voting System Test</h1>
+    
+    <div>
+        <h2>Step 1: Login</h2>
+        <input type="text" id="urn" placeholder="URN" value="1024091040">
+        <input type="text" id="motherName" placeholder="Mother's Name" value="Sujata">
+        <button onclick="login()">Login</button>
+    </div>
+    
+    <div>
+        <h2>Step 2: Fetch Candidates</h2>
+        <button onclick="fetchCandidates()">Fetch Candidates</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        let authToken = null;
+        
+        async function login() {
+            const urn = document.getElementById('urn').value;
+            const motherName = document.getElementById('motherName').value;
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ urn, motherName })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('results').innerHTML = `
+                        <div class="success">
+                            <h3>Login Successful!</h3>
+                            <p>Student: ${data.student.urn}</p>
+                            <p>Year: ${data.student.year}</p>
+                            <p>Has Voted: ${data.student.hasVoted}</p>
+                        </div>
+                    `;
+                    authToken = data.student.id;
+                } else {
+                    document.getElementById('results').innerHTML = `
+                        <div class="error">Login Failed: ${data.message}</div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('results').innerHTML = `
+                    <div class="error">Login Error: ${error.message}</div>
+                `;
+            }
+        }
+        
+        async function fetchCandidates() {
+            try {
+                const response = await fetch('/api/candidates');
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = '<div class="success"><h3>Candidates Fetched Successfully!</h3>';
+                    
+                    Object.entries(data.candidates).forEach(([position, candidates]) => {
+                        html += `<div class="position">
+                            <h4>${position}</h4>`;
+                        
+                        candidates.forEach(candidate => {
+                            html += `<div class="candidate">
+                                <strong>${candidate.name}</strong><br>
+                                Year: ${candidate.year}<br>
+                                ID: ${candidate.id}<br>
+                                Image: ${candidate.imageUrl}
+                            </div>`;
+                        });
+                        
+                        html += '</div>';
+                    });
+                    
+                    html += '</div>';
+                    document.getElementById('results').innerHTML = html;
+                } else {
+                    document.getElementById('results').innerHTML = `
+                        <div class="error">Candidates Fetch Failed: ${data.message}</div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('results').innerHTML = `
+                    <div class="error">Candidates Error: ${error.message}</div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

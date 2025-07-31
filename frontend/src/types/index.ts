@@ -3,7 +3,7 @@
 export interface Candidate {
   id: string;
   name: string;
-  description: string;
+  description?: string; // Make description optional since it's not in the database
   year: string;
   imageUrl?: string;
   position?: string;
@@ -19,10 +19,10 @@ export interface Position {
 
 // Position constants/enum
 export const POSITIONS = {
-  PRESIDENT: 'president',
-  VICE_PRESIDENT: 'vice-president',
-  SECRETARY: 'secretary',
-  TREASURER: 'treasurer',
+  PRESIDENT: 'PRESIDENT',
+  VICE_PRESIDENT: 'VICE_PRESIDENT',
+  SECRETARY: 'SECRETARY',
+  TREASURER: 'TREASURER',
 } as const;
 
 export interface Vote {

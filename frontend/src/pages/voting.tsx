@@ -66,6 +66,10 @@ export default function Voting({ onVoteSuccess, onNavigateToResults }: VotingPro
     queryKey: ["/api/candidates"],
   });
 
+  // Debug logging to check candidates data
+  console.log('Candidates data:', candidatesData);
+  console.log('Is loading:', isLoading);
+
   const submitVotesMutation = useMutation({
     mutationFn: async (votes: Array<{ candidateId: string; position: string }>) => {
       try {
@@ -302,6 +306,7 @@ export default function Voting({ onVoteSuccess, onNavigateToResults }: VotingPro
           {/* Position Selectors */}
           {positions.map((position) => {
             const candidates = candidatesData?.candidates[position.key] || [];
+            console.log(`Candidates for ${position.key}:`, candidates); // Debug log
             
             return (
               <PositionSelector
