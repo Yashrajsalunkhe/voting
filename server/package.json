@@ -5,13 +5,19 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch index.ts",
-    "build": "tsc --noEmit false",
-    "start": "node dist/index.js",
-    "clean": "rm -rf dist",
+    "build": "npm run clean && npm run build:frontend && npm run build:server",
+    "build:frontend": "cd ../frontend && npm run build && cp -r dist ../server/public",
+    "build:server": "tsc",
+    "start": "NODE_ENV=production node dist/index.js",
+    "start:dev": "npm run dev",
+    "clean": "rm -rf dist public",
     "type-check": "tsc --noEmit --skipLibCheck",
-    "lint": "tsc --noEmit --skipLibCheck"
+    "lint": "tsc --noEmit --skipLibCheck",
+    "import-students": "tsx import-students.ts",
+    "verify-students": "tsx verify-students.ts"
   },
   "dependencies": {
+    "csv-parser": "^3.2.0",
     "dotenv": "^17.2.1",
     "express": "^4.21.2",
     "mongoose": "^8.16.5",

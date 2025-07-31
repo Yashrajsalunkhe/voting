@@ -1,4 +1,4 @@
-import { database } from "./db";
+import { database } from "./db.js";
 import { 
   StudentModel, 
   CandidateModel, 
@@ -13,8 +13,8 @@ import {
   type InsertStudent, 
   type InsertVote, 
   Position 
-} from "./shared/schema";
-import { IStorage } from "./storage";
+} from "./shared/schema.js";
+import { IStorage } from "./storage.js";
 import mongoose from "mongoose";
 
 export class MongoStorage implements IStorage {

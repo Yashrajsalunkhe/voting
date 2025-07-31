@@ -1,5 +1,5 @@
-import { database } from "./db";
-import { StudentModel, CandidateModel, VoteModel, SecondYearVotesModel, ThirdYearVotesModel, FinalYearVotesModel, Position } from "./shared/schema";
+import { database } from "./db.js";
+import { StudentModel, CandidateModel, VoteModel, SecondYearVotesModel, ThirdYearVotesModel, FinalYearVotesModel, Position } from "./shared/schema.js";
 import mongoose from "mongoose";
 export class MongoStorage {
     async initializeDatabase() {

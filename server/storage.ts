@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
-import { Position, type Student, type Candidate } from "./shared/schema";
+import { Position, type Student, type Candidate } from "./shared/schema.js";
 import { randomUUID } from "crypto";
-import { mongoStorage, MongoStorage } from "./database-storage";
+import { mongoStorage, MongoStorage } from "./database-storage.js";
 
 // Load environment variables first
 dotenv.config();

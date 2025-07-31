@@ -1,9 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { authSchema, votingSchema } from "./shared/schema";
-import { auditLogger, AuditLogger } from "./audit-logger";
-import { emailService } from "./email-service";
+import { storage } from "./storage.js";
+import { authSchema, votingSchema } from "./shared/schema.js";
+import { auditLogger, AuditLogger } from "./audit-logger.js";
+import { emailService } from "./email-service.js";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {

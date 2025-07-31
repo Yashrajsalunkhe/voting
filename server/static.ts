@@ -19,7 +19,8 @@ export function setupDevelopment(app: Express) {
 }
 
 export function serveStatic(app: Express) {
-  const distPath = path.resolve(import.meta.dirname, "public");
+  // In production, the compiled JS is in dist/, but public files are in the parent directory
+  const distPath = path.resolve(import.meta.dirname, "..", "public");
 
   if (!fs.existsSync(distPath)) {
     throw new Error(

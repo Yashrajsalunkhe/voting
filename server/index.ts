@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
 import express, { type Request, Response, NextFunction } from "express";
 import path from "path";
-import { registerRoutes } from "./routes";
-import { setupDevelopment, serveStatic } from "./static";
+import { registerRoutes } from "./routes.js";
+import { setupDevelopment, serveStatic } from "./static.js";
 
 // Load environment variables
 dotenv.config();
@@ -12,18 +12,20 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Serve static files from public directory in both dev and production
-const publicPath = path.resolve(import.meta.dirname, "..", "public");
+const publicPath = process.env.NODE_ENV === 'production' 
+  ? path.resolve(import.meta.dirname, "..", "public")
+  : path.resolve(import.meta.dirname, "public");
 app.use(express.static(publicPath));
 
 (async () => {
   // Register admin routes
   try {
-    const { registerAdminRoutes } = await import('./admin-routes');
+    const { registerAdminRoutes } = await import('./admin-routes.js');
     registerAdminRoutes(app);
   } catch (error) {
     console.error("Error registering admin routes:", error);
   }
-  
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -46,11 +48,8 @@ app.use(express.static(publicPath));
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    console.log(`Server running on port ${port}`);
+  const host = process.env.NODE_ENV === 'production' ? "0.0.0.0" : "localhost";
+  server.listen(port, host, () => {
+    console.log(`Server running on ${host}:${port}`);
   });
 })();

@@ -1,7 +1,7 @@
 import { Express } from "express";
-import { storage } from "./storage";
+import { storage } from "./storage.js";
 import { z } from "zod";
-import { auditLogger, AuditLogger } from "./audit-logger";
+import { auditLogger, AuditLogger } from "./audit-logger.js";
 
 // Enhanced admin authentication middleware
 const adminAuth = (req: any, res: any, next: any) => {

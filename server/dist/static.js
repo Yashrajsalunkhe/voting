@@ -16,7 +16,8 @@ export function setupDevelopment(app) {
     }
 }
 export function serveStatic(app) {
-    const distPath = path.resolve(import.meta.dirname, "public");
+    // In production, the compiled JS is in dist/, but public files are in the parent directory
+    const distPath = path.resolve(import.meta.dirname, "..", "public");
     if (!fs.existsSync(distPath)) {
         throw new Error(`Could not find the build directory: ${distPath}, make sure to build the client first`);
     }

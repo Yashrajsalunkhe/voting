@@ -1,11 +1,15 @@
 import dotenv from 'dotenv';
-import { Position } from "./shared/schema";
+import { Position } from "./shared/schema.js";
 import { randomUUID } from "crypto";
-import { mongoStorage, MongoStorage } from "./database-storage";
+import { mongoStorage, MongoStorage } from "./database-storage.js";
 // Load environment variables first
 dotenv.config();
 // Use MongoDB storage if MONGODB_URI is available
 const USE_DATABASE = !!process.env.MONGODB_URI;
+console.log('🔍 Storage Debug Info:');
+console.log('MONGODB_URI exists:', !!process.env.MONGODB_URI);
+console.log('USE_DATABASE:', USE_DATABASE);
+console.log('Storage type:', USE_DATABASE ? 'MongoDB' : 'In-Memory');
 export class MemStorage {
     students;
     candidates;

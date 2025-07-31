@@ -1,4 +1,7 @@
+import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+// Load environment variables first
+dotenv.config();
 // MongoDB connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/aisa_voting';
 class Database {

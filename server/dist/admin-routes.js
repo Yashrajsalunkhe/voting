@@ -1,6 +1,6 @@
-import { storage } from "./storage";
+import { storage } from "./storage.js";
 import { z } from "zod";
-import { auditLogger, AuditLogger } from "./audit-logger";
+import { auditLogger, AuditLogger } from "./audit-logger.js";
 // Enhanced admin authentication middleware
 const adminAuth = (req, res, next) => {
     const adminKey = req.headers['x-admin-key'] || req.headers['authorization']?.replace('Bearer ', '');
