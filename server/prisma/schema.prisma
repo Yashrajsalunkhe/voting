@@ -6,8 +6,9 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  previewFeatures = ["interactiveTransactions"]
 }
+
 
 datasource db {
   provider = "mongodb"
