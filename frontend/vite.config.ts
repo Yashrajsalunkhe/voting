@@ -10,6 +10,9 @@ export default defineConfig({
       '@': resolve(import.meta.dirname || __dirname, './src'),
     },
   },
+  build: {
+    outDir: "dist"
+  },
   server: {
     proxy: {
       '/api': {
