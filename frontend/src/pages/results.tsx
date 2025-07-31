@@ -20,8 +20,9 @@ interface ResultsData {
   }>>;
   statistics: {
     totalVotesByPosition: Record<string, number>;
-    overallTotalVotes: number;
+    overallTotalVotes: number; // Now represents number of students who voted
     totalStudents: number;
+    votedStudents: number; // Added: explicit count of students who voted
     turnoutPercentage: number;
     positionsCount: number;
   };
@@ -135,7 +136,7 @@ export default function Results({ onBackToVoting }: ResultsProps) {
                 <div className="text-xl font-bold text-blue-600" data-testid="stat-total-votes">
                   {totalVotesCast}
                 </div>
-                <div className="text-xs text-gray-600">Total Votes</div>
+                <div className="text-xs text-gray-600">Students Voted</div>
               </div>
               <div className="p-3 bg-green-50 rounded-lg">
                 <div className="text-xl font-bold text-green-600" data-testid="stat-turnout">

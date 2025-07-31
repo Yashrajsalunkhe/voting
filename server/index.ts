@@ -272,16 +272,20 @@ app.get("/api/results", async (req, res) => {
 
     // Get voting statistics
     const totalStudents = await prisma.student.count();
-    const votedStudents = await prisma.student.count({
-      where: { hasVoted: true }
+    
+    // Count actual voters based on vote records, not hasVoted flag
+    const actualVoters = await prisma.vote.groupBy({
+      by: ['studentId'],
+      _count: { studentId: true }
     });
+    const actualVotedStudents = actualVoters.length;
 
     // Group results by position and format for frontend
     const groupedResults = results.reduce((acc, result) => {
       if (!acc[result.position]) {
         acc[result.position] = [];
       }
-      acc[result.position].push({
+      acc[result.position]!.push({
         candidateId: result.candidateId,
         candidateName: result.candidateName,
         voteCount: result._count.candidateId
@@ -294,20 +298,22 @@ app.get("/api/results", async (req, res) => {
       if (!acc[result.position]) {
         acc[result.position] = 0;
       }
-      acc[result.position] += result._count.candidateId;
+      acc[result.position] += result._count?.candidateId ?? 0;
       return acc;
     }, {} as Record<string, number>);
 
-    const overallTotalVotes = results.reduce((sum, result) => sum + result._count.candidateId, 0);
+    // Total votes = total number of people who voted (based on actual vote records)
+    const totalVoters = actualVotedStudents;
 
     res.json({
       success: true,
       results: groupedResults,
       statistics: {
         totalVotesByPosition,
-        overallTotalVotes,
+        overallTotalVotes: totalVoters, // Now shows number of actual voters based on vote records
         totalStudents,
-        turnoutPercentage: totalStudents > 0 ? parseFloat(((votedStudents / totalStudents) * 100).toFixed(2)) : 0,
+        votedStudents: actualVotedStudents, // Based on actual vote records, not hasVoted flag
+        turnoutPercentage: totalStudents > 0 ? parseFloat(((actualVotedStudents / totalStudents) * 100).toFixed(2)) : 0,
         positionsCount: Object.keys(groupedResults).length
       }
     });
