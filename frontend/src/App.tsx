@@ -101,16 +101,24 @@ function AppContent() {
   const { hasVoted } = useVotingStatus();
 
   useEffect(() => {
-    // For development: always start at login page
-    // Comment out the auto-login logic during development
-    /*
     const auth = getAuthState();
     console.log('Initial auth state from localStorage:', auth); // Debug log
+    
+    // For development: Clear auth state and always start at login
+    // Remove this in production
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Development mode: clearing auth state and starting at login');
+      clearAuthState();
+      setAuthStateLocal({ isAuthenticated: false, student: null });
+      setCurrentView("login");
+      return;
+    }
+    
     setAuthStateLocal(auth);
-    if (auth.isAuthenticated) {
+    if (auth.isAuthenticated && auth.student) {
       console.log('Auto-logging in user:', auth.student); // Debug log
       // If student has already voted, redirect to results
-      if (auth.student?.hasVoted) {
+      if (auth.student.hasVoted) {
         setCurrentView("results");
       } else {
         setCurrentView("voting");
@@ -119,11 +127,6 @@ function AppContent() {
       console.log('No auth state found, staying on login'); // Debug log
       setCurrentView("login");
     }
-    */
-    
-    // Always start at login for development
-    console.log('Starting at login page for development');
-    setCurrentView("login");
   }, []);
 
   // Update view when voting status changes
