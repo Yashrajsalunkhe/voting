@@ -3,10 +3,17 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "build": "tsc && npx prisma generate",
+    "start": "node dist/index.js",
+    "dev": "tsx index.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/cors": "^2.8.19",
-    "prisma": "^6.13.0"
+    "prisma": "^6.13.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.0.0"
   },
   "peerDependencies": {
     "typescript": "^5"
