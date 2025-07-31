@@ -19,11 +19,10 @@
       "dest": "/server/index.ts"
     },
     {
-      "src": "/(.*)",
-      "dest": "/frontend/dist/$1"
+      "handle": "filesystem"
     },
     {
-      "src": "/",
+      "src": "/.*",
       "dest": "/frontend/dist/index.html"
     }
   ],
