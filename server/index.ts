@@ -1,7 +1,6 @@
 import express from "express";
-import path from "path";
 import cors from "cors";
-import { PrismaClient } from "./generated/prisma/index";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 export const app = express();
@@ -73,7 +72,7 @@ app.get("/api/candidates", async (req, res) => {
     });
 
     // Group candidates by position
-    const candidates = candidatesArray.reduce((acc, candidate) => {
+    const candidates = candidatesArray.reduce((acc: Record<string, any[]>, candidate: any) => {
       if (!acc[candidate.position]) {
         acc[candidate.position] = [];
       }
@@ -133,7 +132,7 @@ app.post("/api/votes", async (req, res) => {
       }
     }
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       for (const vote of votes) {
         const candidate = await tx.candidate.findUnique({
           where: { id: vote.candidateId }
@@ -256,7 +255,7 @@ app.get("/api/results", async (req, res) => {
 
       // Enrich with candidate details
       const enrichedResults = await Promise.all(
-        results.map(async (result) => {
+        results.map(async (result: any) => {
           const candidate = await prisma.candidate.findUnique({
             where: { id: result.candidateId }
           });
@@ -281,7 +280,7 @@ app.get("/api/results", async (req, res) => {
     const actualVotedStudents = actualVoters.length;
 
     // Group results by position and format for frontend
-    const groupedResults = results.reduce((acc, result) => {
+    const groupedResults = results.reduce((acc: Record<string, any[]>, result: any) => {
       if (!acc[result.position]) {
         acc[result.position] = [];
       }
@@ -294,7 +293,7 @@ app.get("/api/results", async (req, res) => {
     }, {} as Record<string, any[]>);
 
     // Calculate statistics
-    const totalVotesByPosition = results.reduce((acc, result) => {
+    const totalVotesByPosition = results.reduce((acc: Record<string, number>, result: any) => {
       if (!acc[result.position]) {
         acc[result.position] = 0;
       }
