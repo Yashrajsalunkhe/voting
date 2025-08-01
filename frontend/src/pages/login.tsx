@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { setAuthState } from "@/lib/auth";
-import { GraduationCap, Vote, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface LoginProps {
   onLoginSuccess: () => void;
