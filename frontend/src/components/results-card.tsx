@@ -8,6 +8,7 @@ interface ResultsCardProps {
   results: Array<{
     candidateId: string; // Changed from number to string
     candidateName: string;
+    candidateImageUrl?: string; // Added candidate image URL
     voteCount: number;
   }>;
   totalVotes: number;
@@ -50,10 +51,29 @@ export function ResultsCard({ position, icon, iconColor, results, totalVotes }: 
               <div key={result.candidateId} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2 flex-1 min-w-0">
+                    {result.candidateImageUrl ? (
+                      <img
+                        src={result.candidateImageUrl}
+                        alt={result.candidateName}
+                        className={`w-8 h-8 rounded-full object-cover flex-shrink-0 ${
+                          isWinner ? 'ring-2 ring-offset-1 ring-blue-500' : ''
+                        }`}
+                        data-testid={`candidate-image-${result.candidateId}`}
+                        onError={(e) => {
+                          // Fallback to initials if image fails to load
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const fallback = target.nextElementSibling as HTMLElement;
+                          if (fallback) fallback.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
                     <div 
                       className={`w-8 h-8 rounded-full ${
                         isWinner ? iconColor : 'bg-gray-400'
-                      } flex items-center justify-center text-white font-bold text-xs flex-shrink-0`}
+                      } flex items-center justify-center text-white font-bold text-xs flex-shrink-0 ${
+                        result.candidateImageUrl ? 'hidden' : 'flex'
+                      }`}
                       data-testid={`candidate-avatar-${result.candidateId}`}
                     >
                       {getInitials(result.candidateName)}

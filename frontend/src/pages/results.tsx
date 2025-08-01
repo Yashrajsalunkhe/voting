@@ -16,6 +16,7 @@ interface ResultsData {
   results: Record<string, Array<{
     candidateId: string; // Changed from number to string to match server response
     candidateName: string;
+    candidateImageUrl?: string; // Added candidate image URL
     voteCount: number;
   }>>;
   statistics: {
@@ -188,7 +189,7 @@ export default function Results({ onBackToVoting }: ResultsProps) {
           <Card className="sticky bottom-4 shadow-lg">
             <CardContent className="p-4 text-center">
               <div className="text-green-600 font-semibold mb-2">
-                ✅ Thank you for voting!
+                Thank you for voting!
               </div>
               <p className="text-sm text-gray-600">
                 Your vote has been recorded. Results will update automatically.
