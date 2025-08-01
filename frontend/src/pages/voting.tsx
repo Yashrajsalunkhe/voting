@@ -86,7 +86,7 @@ export default function Voting({ onVoteSuccess, onNavigateToResults }: VotingPro
         
         const response = await apiRequest("POST", "/api/votes", requestData);
         return response.json();
-        return response.json();
+
       } catch (error: any) {
         // Parse error response for "already voted" message
         if (error.message?.includes("400")) {

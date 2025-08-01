@@ -19,7 +19,7 @@ function Header({
   studentUrn, 
   hasVoted,
   onLogout, 
-  onViewResults, 
+  // onViewResults, 
   onBackToVoting 
 }: {
   currentView: AppView;
