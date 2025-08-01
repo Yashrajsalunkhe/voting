@@ -68,8 +68,8 @@ export default function Login({ onLoginSuccess }: LoginProps) {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
-          <div className="mx-auto w-16 h-16 bg-aisa-blue rounded-full flex items-center justify-center mb-4">
-            <Vote className="text-white" size={24} />
+          <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4">
+            <img src="https://www.adcet.ac.in/uploads/1676968661.png" alt="" />
           </div>
           <h2 className="text-2xl font-bold text-aisa-navy mb-2" data-testid="login-title">
             AISA Elections 2025
@@ -127,7 +127,6 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                   </>
                 ) : (
                   <>
-                    <GraduationCap className="mr-2 h-5 w-5" />
                     Login & Vote
                   </>
                 )}

@@ -34,8 +34,8 @@ function Header({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-aisa-blue rounded-lg flex items-center justify-center">
-              <GraduationCap className="text-white" size={20} />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+              <img src="https://www.adcet.ac.in/uploads/1676968661.png" alt="" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-aisa-navy" data-testid="header-title">
