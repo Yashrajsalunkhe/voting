@@ -8,11 +8,12 @@ import { useVotingStatus } from "@/hooks/use-voting-status";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import Landing from "@/pages/landing";
 import Login from "@/pages/login";
 import Voting from "@/pages/voting";
 import Results from "@/pages/results";
 
-type AppView = "login" | "voting" | "results";
+type AppView = "landing" | "login" | "voting" | "results";
 
 function Header({ 
   currentView, 
@@ -47,7 +48,7 @@ function Header({
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            {currentView !== "login" && (
+            {currentView !== "login" && currentView !== "landing" && (
               <>
                 {studentUrn && (
                   <span className="text-sm text-gray-600" data-testid="user-info">
@@ -94,7 +95,7 @@ function Header({
 }
 
 function AppContent() {
-  const [currentView, setCurrentView] = useState<AppView>("login");
+  const [currentView, setCurrentView] = useState<AppView>("landing");
   const [authState, setAuthStateLocal] = useState(getAuthState());
   
   // Use the voting status hook to keep track of voting state
@@ -104,13 +105,13 @@ function AppContent() {
     const auth = getAuthState();
     console.log('Initial auth state from localStorage:', auth); // Debug log
     
-    // For development: Clear auth state and always start at login
+    // For development: Clear auth state and always start at landing
     // Remove this in production
     if (process.env.NODE_ENV === 'development') {
-      console.log('Development mode: clearing auth state and starting at login');
+      console.log('Development mode: clearing auth state and starting at landing');
       clearAuthState();
       setAuthStateLocal({ isAuthenticated: false, student: null });
-      setCurrentView("login");
+      setCurrentView("landing");
       return;
     }
     
@@ -120,8 +121,8 @@ function AppContent() {
       // Always redirect to voting page first, let the voting component handle the redirect
       setCurrentView("voting");
     } else {
-      console.log('No auth state found, staying on login'); // Debug log
-      setCurrentView("login");
+      console.log('No auth state found, staying on landing'); // Debug log
+      setCurrentView("landing");
     }
   }, []);
 
@@ -151,10 +152,14 @@ function AppContent() {
     setCurrentView("results");
   };
 
+  const handleGetStarted = () => {
+    setCurrentView("login");
+  };
+
   const handleLogout = () => {
     clearAuthState();
     setAuthStateLocal({ isAuthenticated: false, student: null });
-    setCurrentView("login");
+    setCurrentView("landing");
   };
 
   const handleViewResults = () => {
@@ -170,14 +175,21 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header
-        currentView={currentView}
-        studentUrn={authState.student?.urn}
-        hasVoted={hasVoted}
-        onLogout={handleLogout}
-        onViewResults={handleViewResults}
-        onBackToVoting={handleBackToVoting}
-      />
+      {/* Hide header on landing page since it has its own design */}
+      {currentView !== "landing" && (
+        <Header
+          currentView={currentView}
+          studentUrn={authState.student?.urn}
+          hasVoted={hasVoted}
+          onLogout={handleLogout}
+          onViewResults={handleViewResults}
+          onBackToVoting={handleBackToVoting}
+        />
+      )}
+
+      {currentView === "landing" && (
+        <Landing onGetStarted={handleGetStarted} />
+      )}
       
       {currentView === "login" && (
         <Login onLoginSuccess={handleLoginSuccess} />
